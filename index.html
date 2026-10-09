@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Fake Content Detector</title>
+<style>
+  body { font-family: Arial, sans-serif; background:#f3f6f4; margin:0; color:#222; }
+  header { background:#2e7d32; color:#fff; padding:18px; text-align:center; }
+  .wrap { max-width:800px; margin:20px auto; padding:0 15px; }
+  .card { background:#fff; border-radius:8px; padding:20px; margin-bottom:20px; box-shadow:0 1px 4px rgba(0,0,0,.12); }
+  textarea { width:100%; height:130px; padding:10px; box-sizing:border-box; font-size:15px; }
+  button { background:#2e7d32; color:#fff; border:0; padding:10px 22px; border-radius:5px; font-size:15px; cursor:pointer; margin-top:10px; }
+  .result { font-size:22px; font-weight:bold; padding:12px; border-radius:6px; text-align:center; }
+  .Real { background:#e8f5e9; color:#1b5e20; }
+  .Fake { background:#ffebee; color:#b71c1c; }
+  .error { background:#fff3cd; padding:10px; border-radius:5px; }
+  img { max-width:100%; margin-top:10px; }
+  small { color:#666; }
+</style>
+</head>
+<body>
+<header><h1>Fake Content Detector</h1><div>Check text and images for misinformation</div></header>
+<div class="wrap">
+
+  {% if error %}<div class="card error">{{ error }}</div>{% endif %}
+
+  <div class="card">
+    <h3>1. Check News Text</h3>
+    <form method="post">
+      <input type="hidden" name="kind" value="text">
+      <textarea name="text" placeholder="Paste news text here..."></textarea>
+      <button type="submit">Analyze Text</button>
+    </form>
+  </div>
+
+  <div class="card">
+    <h3>2. Check Image</h3>
+    <form method="post" enctype="multipart/form-data">
+      <input type="hidden" name="kind" value="image">
+      <input type="file" name="image" accept="image/*">
+      <br><button type="submit">Analyze Image</button>
+    </form>
+  </div>
+
+  {% if result %}
+  <div class="card">
+    <h3>Report</h3>
+    <div class="result {{ result.label }}">{{ result.label }} &mdash; {{ result.confidence }}% confidence</div>
+
+    {% if kind == 'text' and result.demo_mode %}
+      <p><small>Demo mode: dataset (Fake.csv / True.csv) not found, so this result is only a sample.</small></p>
+    {% endif %}
+
+    {% if kind == 'image' %}
+      <h4>Reasons</h4>
+      <ul>{% for r in result.reasons %}<li>{{ r }}</li>{% endfor %}</ul>
+      <h4>Metadata</h4>
+      <p>Camera: {{ result.metadata.camera or 'N/A' }}<br>
+         Software: {{ result.metadata.software or 'N/A' }}<br>
+         Date: {{ result.metadata.date or 'N/A' }}</p>
+      <h4>ELA Image (bright patches = possible edits)</h4>
+      <img src="{{ url_for('static', filename='ela_result.png') }}?v={{ result.score }}{{ result.confidence }}" alt="ELA result">
+    {% endif %}
+  </div>
+  {% endif %}
+</div>
+</body>
+</html>
